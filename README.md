@@ -54,6 +54,41 @@ print(agent.handle("What is the status of my order A123?"))
 # -> "Packed"
 ```
 
+---
+
+## ToolLogCallbackHandler (Logging Tool Usage)
+
+**Purpose:** Provide a minimal, consistent way to log tool usage without streaming model text. This keeps outputs clean while still showing which tools were called.
+
+**Where it’s used:** `example1/agent.py`, `example1/solution/agent.py`, `example2/agent.py`, `example2/solution/agent.py`.
+
+**Arguments**
+- `tool_count` (int, internal): incremented each time a tool is invoked.
+- `**kwargs`: event payload from Strands. We only read:
+  - `event.contentBlockStart.start.toolUse.name` (tool name)
+
+**Minimal implementation**
+
+```python
+from typing import Any
+
+class ToolLogCallbackHandler:
+    def __init__(self) -> None:
+        self.tool_count = 0
+
+    def __call__(self, **kwargs: Any) -> None:
+        tool_use = (
+            kwargs.get("event", {})
+            .get("contentBlockStart", {})
+            .get("start", {})
+            .get("toolUse")
+        )
+        if tool_use:
+            self.tool_count += 1
+            tool_name = tool_use.get("name", "unknown")
+            print(f"Tool #{self.tool_count}: {tool_name}")
+```
+
 ## 1 - Tools are Contracts Not Functions
 
 **Simple explanation:** A tool is a *promise* about what it accepts and what it returns, not just a random function.
